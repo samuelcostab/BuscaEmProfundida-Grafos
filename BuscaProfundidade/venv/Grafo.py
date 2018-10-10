@@ -42,6 +42,7 @@ class Grafo:
         self.classificacaoArestas = []
         self.listaVertices = []
         self.matrizAdjacencia = []
+        self.tempo = 1
 
         for j in range(self.numVertices):
             linhaMatriz = []
@@ -53,16 +54,8 @@ class Grafo:
         self.listaVertices.append(Vertice(rotulo))
 
     def addAdjacente(self, inicio, fim):
-        if (inicio == fim):
-            self.matrizAdjacencia[inicio][fim] = -2
-
-        elif(self.matrizAdjacencia[inicio][fim] == 0) and (self.matrizAdjacencia[fim][inicio] == 0):
-            self.matrizAdjacencia[inicio][fim] = -1
-            self.matrizAdjacencia[fim][inicio] = 1
-
-        else:
-            self.matrizAdjacencia[inicio][fim] = 2
-            self.matrizAdjacencia[fim][inicio] = 2
+        if(self.matrizAdjacencia[inicio][fim] == 0):
+            self.matrizAdjacencia[inicio][fim] = 1
 
     def imprimeMatriz(self):
         for i in range(self.numVertices):
@@ -72,14 +65,14 @@ class Grafo:
             print(self.listaVertices[i].getRotulo(), end='')
             for j in range(self.numVertices):
                 if(self.matrizAdjacencia[i][j] > 0):
-                    print('   ' + str(self.matrizAdjacencia[i][j]), end='')
+                    print('  ' + str(self.matrizAdjacencia[i][j]), end=' ')
                 else:
                     print('  ' + str(self.matrizAdjacencia[i][j]), end=' ')
             print()
 
     def localizaVertice (self, rotuloPassado):
         for i in range (len(self.listaVertices)):
-            if self.listaVertices[i].getRotulo() == rotuloPassado:
+            if (self.listaVertices[i].getRotulo() == rotuloPassado):
                 return i
 
         return -1
@@ -88,10 +81,10 @@ class Grafo:
         for i in range(self.numVertices):
             contadorLigacoesVertice = 0
             for j in range(self.numVertices):
-                if (self.matrizAdjacencia[i][j] != 0):
+                if(self.matrizAdjacencia[i][j] != 0):##Se o Vertice incide em outro
                     contadorLigacoesVertice += 1
 
-                if(self.matrizAdjacencia[i][j] == 2):
+                if(self.matrizAdjacencia[j][i] == 1):##Se o Vertice é incidido por outro
                     contadorLigacoesVertice += 1
 
             if(contadorLigacoesVertice > 0):
@@ -99,64 +92,75 @@ class Grafo:
 
     def procurarVerticeInicial(self):
         verticeInicial = self.listaVertices[0]
+        qtdLigacoes = 0
         for vertice in self.listaVertices:
-            if (vertice.getQtdLigacoes() > verticeInicial.getQtdLigacoes()) and (vertice.getCor() == "B"):
+            if (vertice.getQtdLigacoes() > 0):
+                if (vertice.getQtdLigacoes() > verticeInicial.getQtdLigacoes()) and (vertice.getCor() == "B"):
+                    verticeInicial = vertice
+            else:
                 verticeInicial = vertice
 
         return verticeInicial
 
-    def obtemAdjacenteNaoVisitado(self, numV):
-        ##Método para buscar o primeiro adjacente ainda não visitado
-        ##Retorna o INDICE do vertice
+    def obtemAdjacente(self, numV):
         for i in range(self.numVertices):
-            if (self.matrizAdjacencia[numV][i] == -1 or self.matrizAdjacencia[numV][i] == 2) and (self.listaVertices[i].getCor() == "B"):
-                return i
+            if (self.matrizAdjacencia[numV][i] == 1) and (self.listaVertices[i].getCor() == "B"):
+                return i ##retorna i se o vertice for NaoVisitado
+
+        for j in range(self.numVertices):
+            if (self.matrizAdjacencia[numV][j] == 1) and (self.listaVertices[j].getCor() == "C"):
+                return j ##retorna j se o vertice for Visitado
 
         return -1
 
-    def obtemAdjacenteVisitado(self,numV):
+    ##tem que programar o Metodo de Contar Componentes Conexas
+
+    def contaComponentesConexas(self):
+        matrizInversa = [self.numVertices][self.numVertices]
         for i in range(self.numVertices):
-            if (self.matrizAdjacencia[numV][i] == -1 or self.matrizAdjacencia[numV][i] == 2) and (self.listaVertices[i].getCor() == "C"):
-                return i
+            for j in range(self.numVertices):
+                if(self.matrizAdjacencia[i][j] == 1):
+                    matrizInversa[i][j] = 0
+                    matrizInversa[j][i] = 1
 
-        return -1
-
-    def buscarEmProfundidade (self):
+        pilhaComponentes = []
         for vertice in self.listaVertices:
-            ##Colorindo todos os vertices para Branco
-            vertice.setCor("B")
+
+
+
+
+
+
+
+    def buscarEmProfundidade (self, controle):
+        if(controle == 0):
+            for vertice in self.listaVertices:
+                ##Colorindo todos os vertices para Branco
+                vertice.setCor("B")
 
         verticeInicial = self.procurarVerticeInicial()
         verticeInicial.setCor("C")
         pilha = []
         pilha.append(verticeInicial) ##adiciona o vertice que inicia a busca na pilha
-        tempo = 1
+
         while len(pilha) != 0:
             verticeAnalisar = pilha[len(pilha) - 1] ##Ultimo elemento da Pilha
-            print("verticeAnalisar {}".format(verticeAnalisar.getRotulo()))
+            verticeAnalisar.setCor("C")
             if(verticeAnalisar.getTempoEntrada() == 0):##Seta o valor de entrada no vertice
-                verticeAnalisar.setTempoEntrada(tempo)
+                verticeAnalisar.setTempoEntrada(self.tempo)
 
-            tempo += 1
+            self.tempo += 1
 
-            indexVAd = self.obtemAdjacenteNaoVisitado(self.localizaVertice(verticeAnalisar.getRotulo()))##Retorna o Vertice adjacente ao VerticeAnalisar
-            if(indexVAd != -1):
-                verticeAdjacente = self.listaVertices[indexVAd]
-
-            else:
-                indexVAd = self.obtemAdjacenteVisitado(self.localizaVertice(verticeAnalisar.getRotulo()))  ##Retorna o Vertice adjacente ao VerticeAnalisar
-
-                verticeAdjacente = self.listaVertices[indexVAd]
-                print("indice do vertice adjacente vistado:{} rotulo {}".format(indexVAd, verticeAdjacente.getRotulo()))
+            indexVAd = self.obtemAdjacente(self.localizaVertice(verticeAnalisar.getRotulo()))##Retorna o Vertice adjacente ao VerticeAnalisar
+            verticeAdjacente = self.listaVertices[indexVAd]
 
             if (verticeAdjacente.getCor() == "B"):
                 self.classificacaoArestas.append((verticeAnalisar.getRotulo(), "ARVORE", verticeAdjacente.getRotulo()))
-                verticeAdjacente.setCor("C")
                 pilha.append(verticeAdjacente)
             else:
                 inicio = self.localizaVertice(verticeAnalisar.getRotulo())
                 fim = self.localizaVertice(verticeAdjacente.getRotulo())
-                if (self.matrizAdjacencia[inicio][fim] == -1 or self.matrizAdjacencia[inicio][fim] == 2):
+                if (self.matrizAdjacencia[inicio][fim] == 1):
                     if(verticeAdjacente.getCor() == "C"):
                         self.classificacaoArestas.append((verticeAnalisar.getRotulo(), "RETORNO", verticeAdjacente.getRotulo()))
 
@@ -164,17 +168,19 @@ class Grafo:
                         self.classificacaoArestas.append((verticeAnalisar.getRotulo(), "CRUZAMENTO", verticeAdjacente.getRotulo()))
 
                 verticeAnalisar.setCor("P")
-                verticeAnalisar.setTempoSaida(tempo)
+                verticeAnalisar.setTempoSaida(self.tempo)
                 self.ordemTopologia.append(verticeAnalisar)
 
                 pilha.pop()
 
-        for vertice in self.listaVertices:
-            vertice.setCor("B")
+        if (self.procurarVerticeInicial().getCor() == "B"):
+            return 1
+
+        return -1
 
     def imprimeTempoDosVertices(self):
         for vertice in self.listaVertices:
-            print("VERTICE: {} {} / {}".format(vertice.getRotulo(), vertice.getTempoEntrada(), vertice.getTempoSaida()))
+                print("VERTICE: {} {} / {}".format(vertice.getRotulo(), vertice.getTempoEntrada(), vertice.getTempoSaida()))
 
     def imprimeOrdemTopologica(self):
         self.ordemTopologia
@@ -187,7 +193,7 @@ class Grafo:
 
 
 if __name__ == "__main__":
-    with open("teste.txt") as arquivo:
+    with open("G1.txt") as arquivo:
         linhas = arquivo.read().split("\n")
 
         primeiraLinha = linhas[0].split(" ")##Quebra primeira linha do arquivo
@@ -210,15 +216,16 @@ if __name__ == "__main__":
 
 
 
-    grafo.imprimeMatriz()
+    ##grafo.imprimeMatriz()
 
     grafo.contarLigacoes()
 
-    grafo.buscarEmProfundidade()
+    n = 0
+    while(n != -1):##Enquanto houver vertice para visitar
+        n = grafo.buscarEmProfundidade(n)
 
     grafo.imprimeTempoDosVertices()
 
-    grafo.imprimeOrdemTopologica()
+    ##grafo.imprimeOrdemTopologica()
 
-    grafo.imprimeClassificacaoArestas()
-
+    ##grafo.imprimeClassificacaoArestas()
